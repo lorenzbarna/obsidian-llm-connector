@@ -1,46 +1,25 @@
-import type { ProviderConfig } from './types';
+import type { LLMConnectorSettings, ProviderConfig } from './types';
 
-/**
- * Plugin settings interface
- */
-export interface LLMConnectorSettings {
-	// Provider configurations
-	providers: Record<string, ProviderConfig>;
-	
-	// Global preferences
-	defaultProvider: string | null;
-	defaultModel: string | null;
-	
-	// Fallback chain - try these providers in order if primary fails
-	fallbackChain: string[];
-	
-	// Usage limits
-	enableCostWarnings: boolean;
-	monthlyCostLimit: number;  // in USD
-	
-	// Rate limiting
-	enableRateLimiting: boolean;
-	requestsPerMinute: number;
-	
-	// Timeouts
-	defaultTimeout: number;  // in milliseconds
-	maxRetries: number;
-}
+// Re-export for convenience
+export type { LLMConnectorSettings };
 
 /**
  * Default settings
  */
 export const DEFAULT_SETTINGS: LLMConnectorSettings = {
 	providers: {},
-	defaultProvider: null,
-	defaultModel: null,
-	fallbackChain: [],
-	enableCostWarnings: true,
-	monthlyCostLimit: 10.0,
-	enableRateLimiting: false,
-	requestsPerMinute: 60,
-	defaultTimeout: 30000,  // 30 seconds
-	maxRetries: 3,
+	tiers: {
+		// All tiers start unconfigured
+		fast: undefined,
+		balanced: undefined,
+		advanced: undefined,
+		thinking: undefined,
+		code: undefined,
+		embedding: undefined,
+	},
+	defaultTier: 'balanced',
+	fallbackNotification: 'console',
+	showOncePerSession: true,
 };
 
 /**

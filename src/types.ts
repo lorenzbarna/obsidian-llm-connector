@@ -1,11 +1,23 @@
 // Core type definitions for LLM Connector
 
 /**
+ * Performance tier for model selection
+ * - fast: Quick responses, lower quality
+ * - balanced: DEFAULT, best for most tasks
+ * - advanced: Maximum quality, slower
+ * - thinking: Complex reasoning tasks
+ * - code: Code generation/review
+ * - embedding: Vector embeddings (no fallback)
+ */
+export type PerformanceTier = 'fast' | 'balanced' | 'advanced' | 'thinking' | 'code' | 'embedding';
+
+/**
  * Completion request options
  */
 export interface CompletionOptions {
 	prompt: string;
-	model?: string;  // Model name or tag like "fast", "smart"
+	tier?: PerformanceTier;  // Performance tier (preferred over model)
+	model?: string;  // Specific model name (overrides tier)
 	provider?: string;  // Specific provider to use
 	systemPrompt?: string;
 	temperature?: number;
@@ -15,6 +27,11 @@ export interface CompletionOptions {
 	presencePenalty?: number;
 	stop?: string[];
 }
+
+/**
+ * Reason for tier fallback
+ */
+export type FallbackReason = 'tier_not_configured' | 'provider_error' | 'rate_limit' | 'timeout' | 'model_unavailable';
 
 /**
  * Completion result with metadata
@@ -29,6 +46,11 @@ export interface CompletionResult {
 		total: number;
 	};
 	finishReason?: 'stop' | 'length' | 'error';
+	// Tier fallback metadata
+	requestedTier?: PerformanceTier;
+	actualTier?: PerformanceTier;
+	fallbackOccurred?: boolean;
+	fallbackReason?: FallbackReason;
 }
 
 /**
@@ -118,4 +140,52 @@ export interface ConnectionResult {
 	success: boolean;
 	message?: string;
 	models?: Model[];
+}
+
+/**
+ * Model assignment for a tier
+ */
+export interface ModelAssignment {
+	provider: string;
+	model: string;
+}
+
+/**
+ * Tier configuration with optional model assignment
+ */
+export interface TierConfig {
+	tier: PerformanceTier;
+	assignment?: ModelAssignment;  // undefined = not configured
+}
+
+/**
+ * Fallback notification preference
+ */
+export type NotificationMode = 'console' | 'notice' | 'both' | 'none';
+
+/**
+ * Settings for the LLM Connector plugin
+ */
+export interface LLMConnectorSettings {
+	// Provider configurations
+	providers: Record<string, ProviderConfig>;
+	
+	// Tier assignments
+	tiers: {
+		fast?: ModelAssignment;
+		balanced?: ModelAssignment;
+		advanced?: ModelAssignment;
+		thinking?: ModelAssignment;
+		code?: ModelAssignment;
+		embedding?: ModelAssignment;
+	};
+	
+	// Default tier when none specified
+	defaultTier: PerformanceTier;
+	
+	// Fallback notification preferences
+	fallbackNotification: NotificationMode;
+	
+	// Show once-per-session notifications
+	showOncePerSession: boolean;
 }
