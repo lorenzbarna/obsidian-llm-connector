@@ -1,0 +1,22 @@
+/* LLM Connector Plugin Styles */
+
+/* Provider group spacing - add space between provider groups */
+.llm-provider-group + .llm-provider-group {
+	margin-top: 24px;
+}
+
+/* Success indicator on provider toggle line */
+.llm-provider-status-success {
+	font-weight: 600;
+}
+
+/* Tier selector button - make it look more like a dropdown */
+.llm-tier-selector-button {
+	min-width: 200px;
+	text-align: left;
+	font-weight: normal;
+}
+
+.llm-tier-selector-button:hover {
+	background-color: var(--background-modifier-hover);
+}
