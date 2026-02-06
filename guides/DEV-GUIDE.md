@@ -873,14 +873,8 @@ For production plugins, we recommend requiring LLM Connector **>= 1.0.0** for al
 
 ---
 
-## Support & Feedback
+## Support
 
 - **GitHub Issues**: Report bugs or request features at the GitHub repository
-- **Documentation**: Check the main [README.md](README.md) for user-facing documentation
 - **Source Code**: Review [`src/api.ts`](src/api.ts) for implementation details
 
----
-
-**Last Updated:** February 6, 2026  
-**API Version:** 1.0.0  
-**License:** MIT
