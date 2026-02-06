@@ -2,28 +2,31 @@
 
 Centralized LLM provider management for Obsidian. Configure AI providers once, let all your plugins use them through a simple, standardized API.
 
-## Phase 1 MVP Status
+## Status
 
-**Current Version:** 0.1.0 (Ollama-Only MVP)
+**Current Version:** 1.0.0 🎉
 
-This is a working MVP focused on **Ollama** (local-first AI). Additional cloud providers (OpenRouter, OpenAI, Anthropic) will be added in Phase 2.
+A production-ready LLM integration plugin supporting both local and cloud AI providers.
 
 **What Works:**
-- ✅ Ollama provider integration
+- ✅ **4 Provider Integrations**: Ollama (local), OpenRouter, OpenAI, Anthropic
 - ✅ Performance tier system (6 tiers with automatic fallback)
-- ✅ Full settings UI for tier configuration
+- ✅ Full settings UI for all providers and tier configuration
 - ✅ Public API for other plugins
 - ✅ LLM Tester reference plugin included
+- ✅ Comprehensive error handling and graceful degradation
 
 ---
 
 ## Features
 
 ### For Users
-- **Local-First AI**: Run models locally with Ollama (privacy-focused, no API keys)
+- **Local-First AI**: Run models locally with Ollama (privacy-focused, no API keys needed)
+- **Cloud AI Support**: Connect to OpenRouter, OpenAI, or Anthropic for cloud-based models
 - **Performance Tiers**: Configure 6 performance tiers (fast, balanced, advanced, thinking, code, embedding)
 - **Automatic Fallback**: If a tier isn't configured, automatically falls back to the next best option
-- **Simple Setup**: Enable provider, assign models to tiers, done
+- **Multi-Provider**: Enable multiple providers simultaneously, assign different models per tier
+- **Simple Setup**: Enable provider(s), assign models to tiers, done
 
 ### For Plugin Developers
 - **Unified API**: One API for all LLM providers - no need to implement provider-specific code
@@ -109,18 +112,140 @@ This is a working MVP focused on **Ollama** (local-first AI). Additional cloud p
 
 ---
 
+## Cloud Provider Setup
+
+In addition to local Ollama, LLM Connector supports three major cloud AI providers. Each requires an API key.
+
+### OpenRouter (Unified Cloud API)
+
+**What is OpenRouter?**
+- Access 200+ AI models through a single API
+- Pay-per-use pricing (typically $0.001-0.10 per 1M tokens)
+- Supports GPT, Claude, Llama, Mistral, and many more
+- Best for: Flexibility and cost optimization
+
+**Setup:**
+1. Create account at [openrouter.ai](https://openrouter.ai/)
+2. Get API key from [openrouter.ai/keys](https://openrouter.ai/keys)
+3. Add credits to your account (minimum $5)
+4. In LLM Connector settings:
+   - Toggle "Enable OpenRouter" ON
+   - Paste your API key
+   - Base URL: `https://openrouter.ai/api/v1` (default)
+   - Click "Test connection"
+5. Assign OpenRouter models to tiers (e.g., `anthropic/claude-3.5-sonnet`)
+
+**Recommended Models:**
+- **Fast:** `google/gemini-flash-1.5` (cheap, quick)
+- **Balanced:** `anthropic/claude-3.5-sonnet` (best all-around)
+- **Advanced:** `anthropic/claude-opus-4.5` (maximum quality)
+- **Thinking:** `deepseek/deepseek-r1` (reasoning tasks)
+- **Code:** `anthropic/claude-3.5-sonnet` (excellent for code)
+
+### OpenAI (GPT Models)
+
+**What is OpenAI?**
+- Original creator of GPT models
+- Industry-leading language models
+- Pay-per-use pricing ($0.002-0.06 per 1M tokens)
+- Best for: GPT-specific features, enterprise reliability
+
+**Setup:**
+1. Create account at [platform.openai.com](https://platform.openai.com/)
+2. Add payment method under Billing
+3. Generate API key from [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+4. In LLM Connector settings:
+   - Toggle "Enable OpenAI" ON
+   - Paste your API key
+   - Base URL: `https://api.openai.com/v1` (default)
+   - Click "Test connection"
+5. Assign OpenAI models to tiers (e.g., `gpt-4o`)
+
+**Recommended Models:**
+- **Fast:** `gpt-4o-mini` (cheap, quick, smart)
+- **Balanced:** `gpt-4o` (best all-around GPT)
+- **Advanced:** `gpt-4-turbo` (maximum context window)
+- **Thinking:** `o1-preview` (deep reasoning)
+- **Code:** `gpt-4o` (excellent for code)
+- **Embedding:** `text-embedding-ada-002` (vectors)
+
+### Anthropic (Claude Models)
+
+**What is Anthropic?**
+- Creator of Claude models
+- Known for safety and helpfulness
+- Pay-per-use pricing ($0.003-0.08 per 1M tokens)
+- Best for: Long context, complex reasoning, ethical AI
+
+**Setup:**
+1. Create account at [console.anthropic.com](https://console.anthropic.com/)
+2. Add payment method under Settings
+3. Generate API key from [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys)
+4. In LLM Connector settings:
+   - Toggle "Enable Anthropic" ON
+   - Paste your API key
+   - Base URL: `https://api.anthropic.com/v1` (default)
+   - Click "Test connection"
+5. Assign Claude models to tiers (e.g., `claude-3.5-sonnet`)
+
+**Recommended Models:**
+- **Fast:** `claude-haiku-4.5` (fastest Claude)
+- **Balanced:** `claude-sonnet-4.5` (best all-around)
+- **Advanced:** `claude-opus-4.5` (maximum quality)
+- **Thinking:** `claude-opus-4.5` (excellent reasoning)
+- **Code:** `claude-sonnet-4.5` (best for code)
+
+**Note:** Anthropic does not offer embedding models.
+
+### Cost Comparison
+
+Approximate costs for generating 1 million tokens (completion):
+
+| Provider | Fast | Balanced | Advanced |
+|----------|------|----------|----------|
+| **Ollama** | Free (local) | Free (local) | Free (local) |
+| **OpenRouter** | $0.001-0.01 | $0.01-0.05 | $0.05-0.10 |
+| **OpenAI** | $0.002 (mini) | $0.01 (4o) | $0.03 (turbo) |
+| **Anthropic** | $0.003 (haiku) | $0.015 (sonnet) | $0.08 (opus) |
+
+**Tip:** Use Ollama for development and prototyping (free), switch to cloud for production or when you need advanced capabilities.
+
+### Privacy & Data Handling
+
+**What data is sent where:**
+
+- **Ollama (Local)**: All data stays on your machine. No external servers contacted.
+- **OpenRouter**: Your prompts and responses are sent to OpenRouter, which forwards to the selected model provider. Data is not stored by OpenRouter (see their [privacy policy](https://openrouter.ai/privacy)).
+- **OpenAI**: Your prompts and responses are sent to OpenAI servers. By default, API data is not used for training (see [data usage policies](https://platform.openai.com/docs/data-usage-policies)).
+- **Anthropic**: Your prompts and responses are sent to Anthropic servers. API data is not used for training (see [privacy policy](https://www.anthropic.com/privacy)).
+
+**This plugin:**
+- ✅ Does NOT store, log, or transmit any of your data
+- ✅ Does NOT collect telemetry or analytics
+- ✅ Stores API keys locally in Obsidian settings (encrypted by Obsidian)
+- ✅ Only sends data when you explicitly trigger an LLM request
+- ✅ Open source - you can audit the code yourself
+
+**Recommendations:**
+- Use Ollama for sensitive/private notes (100% local)
+- Use cloud providers for non-sensitive tasks or when you need advanced capabilities
+- Review each provider's privacy policy before use
+- Never include API keys, passwords, or secrets in your prompts
+
+---
+
 ## Performance Tiers
 
 The tier system lets you configure different models for different use cases:
 
 | Tier | Use Case | Example Models | Fallback Chain |
 |------|----------|----------------|----------------|
-| **Fast** | Quick responses, simple tasks | granite3.2:2b (2.5B) | fast → balanced → advanced |
-| **Balanced** | General-purpose, most tasks | llama3.2 (3B), gemma3 (4.3B) | balanced → advanced → fast |
-| **Advanced** | Complex reasoning, long context | phi4 (14.7B), deepseek-r1 | advanced → balanced → fast |
-| **Thinking** | Deep reasoning, problem-solving | deepseek-r1, phi4 | thinking → advanced → balanced → fast |
-| **Code** | Code generation, review | deepseek-coder, codellama | code → advanced → balanced → fast |
-| **Embedding** | Vector embeddings, semantic search | nomic-embed-text | embedding ONLY (no fallback) |
+| **Fast** | Quick responses, simple tasks | granite3.2:2b, gpt-4o-mini, claude-haiku | fast → balanced → advanced |
+| **Balanced** | General-purpose, most tasks | llama3.2, gpt-4o, claude-sonnet | balanced → advanced → fast |
+| **Advanced** | Complex reasoning, long context | phi4, gpt-4-turbo, claude-opus | advanced → balanced → fast |
+| **Thinking** | Deep reasoning, problem-solving | deepseek-r1, o1-preview, claude-opus | thinking → advanced → balanced → fast |
+| **Code** | Code generation, review | deepseek-coder, gpt-4o, claude-sonnet | code → advanced → balanced → fast |
+| **Embedding** | Vector embeddings, semantic search | nomic-embed-text, text-embedding-ada-002 | embedding ONLY (no fallback) |
 
 **How Fallback Works:**
 - If you request "advanced" tier but haven't configured it, the system automatically falls back to "balanced"
@@ -132,7 +257,11 @@ The tier system lets you configure different models for different use cases:
 
 ## API for Plugin Developers
 
-### Basic Usage
+LLM Connector exposes a clean, typed API for other Obsidian plugins to consume. This allows plugins to access AI capabilities without implementing provider-specific code.
+
+**📘 Complete API documentation: [API.md](API.md)**
+
+### Quick Start
 
 ```typescript
 import { Plugin, Notice } from 'obsidian';
@@ -270,38 +399,24 @@ See `.obsidian/plugins/llm-tester/` for a complete working example:
 
 ## Troubleshooting
 
-### Plugin doesn't appear in settings
+### General Issues
+
+#### Plugin doesn't appear in settings
 - Ensure `manifest.json` exists in `.obsidian/plugins/llm-connector/`
 - Restart Obsidian completely
 - Check console (Ctrl+Shift+I) for errors
 
-### "Test connection" fails
-- Verify Ollama is running: `curl http://localhost:11434/api/tags`
-- If Ollama isn't running: `ollama serve` (in terminal)
-- Check base URL in settings (default: `http://localhost:11434`)
-- Check firewall isn't blocking localhost:11434
-
-### No models available
-- Pull at least one model: `ollama pull llama3.2`
-- Click "Test connection" again to refresh model list
-- Check models are installed: `ollama list`
-
-### LLM request fails with "No tier configured"
+#### LLM request fails with "No tier configured"
 - Go to Settings → LLM Connector
 - Assign at least one model to the "Balanced" tier
 - This is the default tier used when plugins don't specify one
 
-### Fallback keeps happening
+#### Fallback keeps happening
 - Check which tier is being requested in console
 - Assign a model to that tier in settings
 - Or let fallback work automatically (that's the design!)
 
-### Response is slow
-- Use "Fast" tier instead of "Balanced" or "Advanced"
-- Smaller models (2B-3B params) are faster than larger models (14B+)
-- Ollama performance depends on your hardware (CPU/GPU)
-
-### Consumer plugin can't find API
+#### Consumer plugin can't find API
 ```typescript
 const llm = this.app.plugins.plugins['llm-connector']?.api;
 if (!llm) {
@@ -311,31 +426,129 @@ if (!llm) {
 }
 ```
 
+### Ollama-Specific Issues
+
+#### "Test connection" fails
+- Verify Ollama is running: `curl http://localhost:11434/api/tags`
+- If Ollama isn't running: `ollama serve` (in terminal)
+- Check base URL in settings (default: `http://localhost:11434`)
+- Check firewall isn't blocking localhost:11434
+
+#### No models available
+- Pull at least one model: `ollama pull llama3.2`
+- Click "Test connection" again to refresh model list
+- Check models are installed: `ollama list`
+
+#### Response is slow
+- Use "Fast" tier instead of "Balanced" or "Advanced"
+- Smaller models (2B-3B params) are faster than larger models (14B+)
+- Ollama performance depends on your hardware (CPU/GPU)
+- Consider using cloud providers for faster response times
+
+### Cloud Provider Issues
+
+#### OpenRouter "Test connection" fails with 401 Unauthorized
+- Verify your API key is correct (copy-paste from [openrouter.ai/keys](https://openrouter.ai/keys))
+- Check you have credits in your account (Settings → Credits)
+- API key must start with `sk-or-v1-`
+
+#### OpenRouter "402 Payment Required"
+- Add credits to your OpenRouter account
+- Minimum is typically $5
+- Go to [openrouter.ai/credits](https://openrouter.ai/credits)
+
+#### OpenRouter "429 Rate Limit"
+- You're making too many requests too quickly
+- Wait a few seconds and try again
+- Consider increasing timeout in settings
+- Or spread requests over time
+
+#### OpenAI "Test connection" fails with 401 Unauthorized
+- Verify your API key is correct (from [platform.openai.com/api-keys](https://platform.openai.com/api-keys))
+- Ensure you've added a payment method (even if you have free credits)
+- API key must start with `sk-`
+
+#### OpenAI "429 Rate Limit"
+- Free tier has strict rate limits
+- Upgrade to paid tier for higher limits
+- Or wait and retry (limits reset periodically)
+
+#### OpenAI "Quota exceeded"
+- You've used all your credits
+- Add more credits to your account
+- Check usage at [platform.openai.com/usage](https://platform.openai.com/usage)
+
+#### Anthropic "Test connection" fails with 401 Unauthorized
+- Verify your API key is correct (from [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys))
+- Ensure you've added a payment method
+- API key must start with `sk-ant-`
+
+#### Anthropic "529 Service Overloaded"
+- Anthropic servers are temporarily overloaded
+- Wait 30-60 seconds and try again
+- Consider configuring a fallback tier
+
+#### Cloud provider request is slow
+- Cloud API latency is typically 1-5 seconds
+- Faster than local models for complex tasks
+- Use "Fast" tier models (mini/haiku/flash) for quicker responses
+- Check your internet connection
+
+#### API key security concerns
+- API keys are stored in Obsidian's settings file (data.json)
+- Obsidian encrypts this file by default
+- Never commit `data.json` to version control
+- Regenerate keys if you suspect they're compromised
+- Use separate API keys for different applications
+
+### Error Messages Explained
+
+**"Provider not found"**
+- The requested provider isn't enabled in settings
+- Enable the provider and click "Test connection"
+
+**"Model not found"**
+- The requested model isn't available from any enabled provider
+- Check model name spelling
+- Verify the provider that offers this model is enabled
+
+**"Provider is not configured"**
+- Provider is enabled but missing required settings (e.g., API key)
+- Go to settings and complete the provider configuration
+
+**"Tier resolution failed"**
+- No model assigned to the requested tier
+- And no fallback tier has a model assigned
+- Assign at least one model to the "Balanced" tier
+
+**"Embeddings not supported"**
+- You requested embeddings from a provider/model that doesn't support them
+- Use Ollama with `nomic-embed-text` or OpenAI with `text-embedding-ada-002`
+- Note: Anthropic does not offer embedding models
+
 ---
 
-## Current Limitations (Phase 1 MVP)
+## Current Limitations
 
-- **Ollama only**: Cloud providers (OpenRouter, OpenAI, Anthropic) coming in Phase 2
-- **No streaming**: Responses arrive all at once (due to Obsidian API limitations)
-- **No cost tracking**: Only needed for cloud providers (Phase 2)
-- **No vision tier**: Multimodal support planned for Phase 3
+- **No true streaming**: Responses arrive all at once (due to Obsidian API limitations with `requestUrl`)
+- **No vision tier**: Multimodal support (image understanding) not yet implemented
+- **No conversation history**: Each request is independent (multi-turn chat not supported yet)
+- **Mobile untested**: Desktop-only for now (mobile testing planned)
 
 ---
 
 ## Roadmap
 
-### Phase 2: Multi-Provider Support
-- OpenRouter provider (unified cloud API)
-- OpenAI provider (GPT models)
-- Anthropic provider (Claude models)
-- Cost tracking and limits for paid providers
-- True streaming support (if Obsidian API permits)
+### Planned Features
 
-### Phase 3: Advanced Features
-- Vision tier (image understanding)
-- Conversation history (multi-turn chats)
-- Usage analytics dashboard
-- Custom provider SDK
+- **Mobile support**: Test and optimize for iOS/Android
+- **True streaming**: Real-time token streaming (if Obsidian API permits)
+- **Vision tier**: Image understanding with multimodal models (GPT-4 Vision, Claude 3 Opus)
+- **Conversation history**: Multi-turn chat support with context management
+- **Cost tracking**: Usage analytics and spending limits for cloud providers
+- **Custom providers**: SDK for adding your own provider implementations
+- **Model caching**: Cache model lists to reduce API calls
+- **Retry logic**: Automatic retry with exponential backoff for transient errors
 
 ---
 
@@ -369,21 +582,42 @@ llm-connector/
 │   │   └── TierResolver.ts          # Tier → model resolution
 │   ├── providers/
 │   │   ├── LLMProvider.ts           # Abstract provider base
-│   │   └── OllamaProvider.ts        # Ollama implementation
+│   │   ├── OllamaProvider.ts        # Ollama implementation
+│   │   ├── OpenRouterProvider.ts    # OpenRouter implementation
+│   │   ├── OpenAIProvider.ts        # OpenAI implementation
+│   │   └── AnthropicProvider.ts     # Anthropic implementation
 │   ├── ui/
 │   │   └── LLMConnectorSettingTab.ts # Settings UI
 │   └── utils/
 │       └── NotificationManager.ts   # Fallback notifications
 ├── manifest.json
-├── main.js                          # Compiled output (22KB)
-└── README.md
+├── main.js                          # Compiled output (37KB)
+├── LICENSE
+├── README.md
+└── API.md                           # API documentation
 ```
 
 ---
 
 ## License
 
-MIT
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## Author
+
+**Lorenz Barna**
+- GitHub: [@lorenzbarna](https://github.com/lorenzbarna)
+
+## Contributing
+
+Contributions are welcome! Please:
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes with clear commit messages
+4. Test thoroughly
+5. Submit a pull request
+
+For bugs and feature requests, open an issue on GitHub.
 
 ---
 
@@ -391,4 +625,4 @@ MIT
 
 Built with ❤️ for the Obsidian community.
 
-**Philosophy:** Local-first, privacy-focused AI that respects user control.
+**Philosophy:** Local-first, privacy-focused AI that respects user control and enables seamless plugin integration.

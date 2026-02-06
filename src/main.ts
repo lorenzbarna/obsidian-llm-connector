@@ -200,7 +200,7 @@ export default class LLMConnectorPlugin extends Plugin {
 	 */
 	private createAPI(): LLMConnectorAPI {
 		return {
-			version: '0.1.0',
+			version: '1.0.0',
 
 			complete: async (options: CompletionOptions): Promise<CompletionResult> => {
 				// Validate options

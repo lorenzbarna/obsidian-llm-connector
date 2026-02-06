@@ -1,10 +1,10 @@
 {
 	"id": "llm-connector",
 	"name": "LLM Connector",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
 	"description": "Centralized LLM provider management for Obsidian. Connect AI providers and expose a unified API for other plugins.",
-	"author": "Your Name",
-	"authorUrl": "https://github.com/yourusername",
+	"author": "Lorenz Barna",
+	"authorUrl": "https://github.com/lorenzbarna",
 	"isDesktopOnly": false
 }
