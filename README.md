@@ -20,7 +20,6 @@ Centralized LLM provider management for Obsidian. Configure AI providers once, l
 - **Tier-Based Requests**: Request "balanced" tier instead of hardcoding model names
 - **Reference Implementation**: LLM Tester plugin shows exactly how to integrate
 
----
 
 ## Getting Started
 
@@ -34,7 +33,7 @@ Centralized LLM provider management for Obsidian. Configure AI providers once, l
 
 1. Open **Settings → LLM Connector**
 
-2. Enable Providers (e.g. Ollama) 
+2. Enable Providers (Provider-Specific Guides in the **[User Guide](./guides/USER-GUIDE.md#provider-specific-setup)**) 
    - Configure API settings
    - Press **Test connection** to verify connection and fetch model list
    - Should show "✓" next to Provider name
@@ -52,11 +51,20 @@ Centralized LLM provider management for Obsidian. Configure AI providers once, l
    - Notification mode: **Console** (or "Notice" to show Obsidian notifications)
    - Show once per session: **ON** (reduce notification spam)
 
-### Provider-Specific Setup
 
-Find more information on setting up each provider in the **[User Guide](./guides/USER-GUIDE.md#provider-specific-setup)**. 
+## Mobile Limitations
 
----
+**Important:** LLM Connector works on Obsidian mobile, but with limitations:
+
+- **Local Ollama does NOT work** - Ollama runs on localhost and cannot be accessed from mobile devices
+- **Remote Ollama DOES work** - If you expose Ollama via network (e.g., Tailscale, VPN, public IP), mobile can connect
+- **All cloud providers work** - OpenRouter, OpenAI, and Anthropic work normally on mobile
+
+**Recommendation:**
+- Do NOT sync plugin settings if you use Ollama locally on desktop
+- Configure cloud providers separately on mobile
+- OR expose Ollama remotely and configure the remote URL in mobile settings
+
 
 ## Privacy & Data Handling
 
@@ -74,7 +82,6 @@ Find more information on setting up each provider in the **[User Guide](./guides
 - Only sends data when you explicitly trigger an LLM request
 - Open source - you can audit the code yourself
 
----
 
 ## Performance Tiers
 
@@ -97,7 +104,6 @@ Examples are only current suggestions based on popular models. Do your own resea
 - Notifications show which tier was actually used
 - Embedding tier NEVER falls back (incompatible with chat models)
 
----
 
 ## API for Plugin Developers
 
@@ -105,20 +111,17 @@ LLM Connector exposes a clean, typed API for other Obsidian plugins to consume. 
 
 Find the Complete API documentation in the **[Dev Guide](./guides/DEV-GUIDE.md)**. An example usecase can be found in the **[LLM Tester plugin](https://github.com/lorenzodonini/obsidian-llm-tester)**.
 
----
 
 ## Troubleshooting
 
 Find common issues and solutions in the **[Troubleshooting Part of the User Guide](./guides/USER-GUIDE.md#troubleshooting)**.
 
----
 
 ## Plugins using LLM Connector
 
 - [Dynamic Contacts](https://github.com/lorenzbarna/dynamic-contacts) - Generate contact summaries, action items, and follow-ups using LLMs
 
 
----
 
 ## Roadmap
 
@@ -133,13 +136,11 @@ Find common issues and solutions in the **[Troubleshooting Part of the User Guid
 - [ ] **Model caching**: Cache model lists to reduce API calls
 - [ ] **Retry logic**: Automatic retry for generation tasks
 
----
 
 ## About AI use in Development
 
 LLM Connector is an experiment in semi-automated development using AI. Big parts of the codebase and documentation were generated with the help of [OpenCode](https://opencode.ai/) using models like Claude Sonnet 4.5 and others. For me this is an attempt to find out what is currently possible with AI-assisted development and what its limitations are. I believe this to be a successful experiment and am happy with the results and especially think this plugin has potential to be useful, which is why I decided to release it as a community plugin. 
 
----
 
 ## License
 
