@@ -53,7 +53,7 @@ export abstract class LLMProvider {
 	 * @returns Async generator yielding text chunks
 	 */
 	// Default implementation throws error - providers can override
-	// eslint-disable-next-line require-yield
+	// eslint-disable-next-line require-yield -- Base class throws error, concrete implementations will use yield
 	async *stream(_options: StreamOptions): AsyncGenerator<string, void, unknown> {
 		throw new Error(`Streaming not supported by ${this.name}`);
 	}
@@ -80,7 +80,7 @@ export abstract class LLMProvider {
 	 * Get current configuration (without sensitive data)
 	 */
 	getConfig(): Omit<ProviderConfig, 'apiKey'> {
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars -- apiKey destructured to exclude from return value
 		const { apiKey, ...safeConfig } = this.config;
 		return safeConfig;
 	}

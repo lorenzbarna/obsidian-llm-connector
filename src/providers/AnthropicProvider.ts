@@ -144,14 +144,14 @@ export class AnthropicProvider extends LLMProvider {
 	 * List available Claude models
 	 * Note: Anthropic doesn't have a models endpoint, so we return a hardcoded list
 	 */
-	async listModels(): Promise<Model[]> {
+	listModels(): Promise<Model[]> {
 		// Validate API key is present
 		if (!this.config.apiKey) {
 			throw new Error('Anthropic API key is required');
 		}
 
 		// Return hardcoded list of Claude models
-		return AnthropicProvider.CLAUDE_MODELS.map((model) => ({
+		return Promise.resolve(AnthropicProvider.CLAUDE_MODELS.map((model) => ({
 			id: model.id,
 			name: model.name,
 			provider: this.id,
@@ -160,7 +160,7 @@ export class AnthropicProvider extends LLMProvider {
 			tags: model.tags,
 			capabilities: ['text'],
 			costPerToken: model.pricing,
-		}));
+		})));
 	}
 
 	/**
@@ -302,7 +302,7 @@ export class AnthropicProvider extends LLMProvider {
 	 * NOTE: Anthropic doesn't offer embedding models as of now
 	 * This method throws an error
 	 */
-	async embeddings(_text: string, _options?: { model?: string }): Promise<number[]> {
-		throw new Error('Anthropic does not currently provide embedding models. Please use OpenAI or OpenRouter for embeddings.');
+	embeddings(_text: string, _options?: { model?: string }): Promise<number[]> {
+		return Promise.reject(new Error('Anthropic does not currently provide embedding models. Please use OpenAI or OpenRouter for embeddings.'));
 	}
 }
