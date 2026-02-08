@@ -20,6 +20,7 @@ export const DEFAULT_SETTINGS: LLMConnectorSettings = {
 	defaultTier: 'balanced',
 	fallbackNotification: 'console',
 	showOncePerSession: true,
+	modelCache: undefined,
 };
 
 /**

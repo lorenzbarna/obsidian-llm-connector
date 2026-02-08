@@ -16,9 +16,7 @@ export class ProviderManager {
 	 */
 	register(provider: LLMProvider): void {
 		const id = provider.id;
-		if (this.providers.has(id)) {
-			console.warn(`Provider ${id} is already registered, replacing`);
-		}
+		// Silent replacement - re-registration is normal during refresh
 		this.providers.set(id, provider);
 		console.debug(`Registered provider: ${provider.name} (${id})`);
 	}
@@ -209,7 +207,9 @@ export class ProviderManager {
 					const models = await provider.listModels();
 					allModels.push(...models);
 				} catch (error: unknown) {
-					console.error(`Error listing models from ${provider.name}:`, error);
+					// Use debug for network/connection errors (expected when offline)
+					// Keeps console clean while still allowing developer debugging
+					console.debug(`Could not reach ${provider.name}:`, error);
 				}
 			}
 		}

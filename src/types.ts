@@ -164,6 +164,14 @@ export interface TierConfig {
 export type NotificationMode = 'console' | 'notice' | 'both' | 'none';
 
 /**
+ * Model cache for offline use
+ */
+export interface ModelCache {
+	models: Model[];
+	timestamp: number;
+}
+
+/**
  * Settings for the LLM Connector plugin
  */
 export interface LLMConnectorSettings {
@@ -188,4 +196,7 @@ export interface LLMConnectorSettings {
 	
 	// Show once-per-session notifications
 	showOncePerSession: boolean;
+	
+	// Cached models for offline use
+	modelCache?: ModelCache;
 }

@@ -1,4 +1,4 @@
-import { Plugin } from 'obsidian';
+import { Plugin, Notice } from 'obsidian';
 import { ProviderManager } from './models/ProviderManager';
 import { ModelRegistry } from './models/ModelRegistry';
 import { TierResolver } from './models/TierResolver';
@@ -50,8 +50,11 @@ export default class LLMConnectorPlugin extends Plugin {
 		// Register providers
 		this.registerProviders();
 
-		// Load models from providers
-		await this.refreshModels();
+		// Load models from cache immediately (synchronous, instant startup)
+		if (this.settings.modelCache && this.settings.modelCache.models.length > 0) {
+			this.modelRegistry.updateModels(this.settings.modelCache.models);
+			console.debug(`Loaded ${this.settings.modelCache.models.length} models from cache`);
+		}
 
 		// Expose public API
 		this.api = this.createAPI();
@@ -60,6 +63,11 @@ export default class LLMConnectorPlugin extends Plugin {
 		this.addSettingTab(new LLMConnectorSettingTab(this.app, this));
 
 		console.debug('LLM Connector Plugin loaded successfully');
+
+		// Refresh models from providers in background (non-blocking)
+		this.refreshModelsWithTimeout(5000).catch(() => {
+			// Error already handled inside refreshModelsWithTimeout
+		});
 	}
 
 	onunload(): void {
@@ -89,6 +97,47 @@ export default class LLMConnectorPlugin extends Plugin {
 	}
 
 	/**
+	 * Refresh models from all providers with timeout (for background refresh)
+	 */
+	async refreshModelsWithTimeout(timeoutMs: number): Promise<void> {
+		const timeoutPromise = new Promise<never>((_, reject) => {
+			setTimeout(() => reject(new Error('Network timeout')), timeoutMs);
+		});
+
+		try {
+			await Promise.race([this.refreshModels(), timeoutPromise]);
+			// Success - models refreshed from providers
+		} catch (error: unknown) {
+			// Get list of enabled providers that couldn't be reached
+			const enabledProviders: string[] = [];
+			for (const [id, config] of Object.entries(this.settings.providers)) {
+				if (config.enabled) {
+					enabledProviders.push(id.charAt(0).toUpperCase() + id.slice(1));
+				}
+			}
+
+			// Check if we already loaded from cache at startup
+			const hasModels = this.modelRegistry.list().length > 0;
+			
+			if (hasModels) {
+				// Already using cache, just show info about offline status
+				console.debug('Using cached models - providers unreachable');
+				if (enabledProviders.length > 0) {
+					new Notice(`Offline: ${enabledProviders.join(', ')} unreachable. Using cached models.`, 6000);
+				}
+			} else {
+				// No cache available at all
+				console.error('Failed to load models from providers:', error);
+				if (enabledProviders.length > 0) {
+					new Notice(`Offline: ${enabledProviders.join(', ')} unavailable. No cached models.`, 8000);
+				} else {
+					new Notice('No internet connection. Providers unavailable.', 6000);
+				}
+			}
+		}
+	}
+
+	/**
 	 * Refresh models from all providers
 	 */
 	async refreshModels(): Promise<void> {
@@ -96,8 +145,16 @@ export default class LLMConnectorPlugin extends Plugin {
 			const models = await this.providerManager.getAllModels();
 			this.modelRegistry.updateModels(models);
 			console.debug(`Loaded ${models.length} models from providers`);
+			
+			// Cache models for offline use
+			this.settings.modelCache = {
+				models,
+				timestamp: Date.now(),
+			};
+			await this.saveSettings();
 		} catch (error: unknown) {
 			console.error('Error refreshing models:', error);
+			throw error;
 		}
 	}
 

@@ -37,6 +37,41 @@ export class LLMConnectorSettingTab extends PluginSettingTab {
 			.setName('Provider configuration')
 			.setHeading();
 
+		// Add "Refresh All Providers" button at the top
+		new Setting(containerEl)
+			.setName('Refresh all providers')
+			.setDesc('Reload models from all enabled providers')
+			.addButton(button => button
+				.setButtonText('Refresh all')
+				.onClick(async () => {
+					button.setDisabled(true);
+					button.setButtonText('Refreshing...');
+
+					try {
+						// Re-register all providers with current configs
+						this.plugin['providerManager']?.loadConfigs(this.plugin.settings.providers);
+						this.plugin.registerProviders();
+
+						// Refresh models
+						await this.plugin.refreshModels();
+
+						const modelCount = this.plugin.api.listModels().length;
+						new Notice(`Refreshed all providers. Found ${modelCount} models total.`);
+
+						// Refresh display
+						this.display();
+					} catch (error: unknown) {
+						if (error instanceof Error) {
+							new Notice(`Error refreshing providers: ${error.message}`);
+						} else {
+							new Notice('Unknown error occurred while refreshing');
+						}
+					} finally {
+						button.setDisabled(false);
+						button.setButtonText('Refresh all');
+					}
+				}));
+
 		// Ollama Provider
 		this.displayProvider(containerEl, {
 			id: 'ollama',
@@ -227,13 +262,19 @@ export class LLMConnectorSettingTab extends PluginSettingTab {
 			}
 
 			// Action buttons (Test connection + Reload models)
-			new Setting(providerGroup)
+			const actionsSetting = new Setting(providerGroup)
 				.setName('Actions')
 				.addButton(button => button
 					.setButtonText('Test connection')
 					.onClick(async () => {
 						button.setDisabled(true);
 						button.setButtonText('Testing...');
+
+						// Clear previous status
+						const existingStatus = actionsSetting.descEl.querySelector('.llm-connection-status');
+						if (existingStatus) {
+							existingStatus.remove();
+						}
 
 						try {
 							const provider = this.plugin['providerManager']?.getProvider(config.id);
@@ -243,8 +284,12 @@ export class LLMConnectorSettingTab extends PluginSettingTab {
 
 							const result = await provider.connect();
 
+							// Create inline status element
+							const statusEl = actionsSetting.descEl.createDiv({ cls: 'llm-connection-status' });
+
 							if (result.success) {
-								new Notice(`Connected to ${config.name}. Found ${result.models?.length ?? 0} models.`);
+								statusEl.setText(`✓ Connected: ${result.models?.length ?? 0} models loaded`);
+								statusEl.setCssProps({ color: 'var(--text-success)' });
 
 								// Refresh models
 								await this.plugin.refreshModels();
@@ -252,14 +297,17 @@ export class LLMConnectorSettingTab extends PluginSettingTab {
 								// Refresh display to update tier dropdowns and status indicator
 								this.display();
 							} else {
-								new Notice(`Connection failed: ${result.message ?? 'Unknown error'}`);
+								statusEl.setText(`❌ Failed to connect: ${result.message ?? 'Unknown error'}`);
+								statusEl.setCssProps({ color: 'var(--text-error)' });
 							}
 						} catch (error: unknown) {
+							const statusEl = actionsSetting.descEl.createDiv({ cls: 'llm-connection-status' });
 							if (error instanceof Error) {
-								new Notice(`Error: ${error.message}`);
+								statusEl.setText(`❌ error: ${error.message}`);
 							} else {
-								new Notice('Unknown error occurred');
+								statusEl.setText('❌ unknown error');
 							}
+							statusEl.setCssProps({ color: 'var(--text-error)' });
 						} finally {
 							button.setDisabled(false);
 							button.setButtonText('Test connection');
@@ -271,6 +319,12 @@ export class LLMConnectorSettingTab extends PluginSettingTab {
 						button.setDisabled(true);
 						button.setButtonText('Reloading...');
 
+						// Clear previous status
+						const existingStatus = actionsSetting.descEl.querySelector('.llm-connection-status');
+						if (existingStatus) {
+							existingStatus.remove();
+						}
+
 						try {
 							// Re-register provider with current config
 							this.plugin['providerManager']?.loadConfigs(this.plugin.settings.providers);
@@ -280,16 +334,22 @@ export class LLMConnectorSettingTab extends PluginSettingTab {
 							await this.plugin.refreshModels();
 
 							const modelCount = this.plugin.api.listModels({ provider: config.id }).length;
-							new Notice(`Reloaded ${config.name}. Found ${modelCount} models.`);
+							
+							// Create inline status element
+							const statusEl = actionsSetting.descEl.createDiv({ cls: 'llm-connection-status' });
+							statusEl.setText(`✓ Reloaded: ${modelCount} models found`);
+							statusEl.setCssProps({ color: 'var(--text-success)' });
 
 							// Refresh display
 							this.display();
 						} catch (error: unknown) {
+							const statusEl = actionsSetting.descEl.createDiv({ cls: 'llm-connection-status' });
 							if (error instanceof Error) {
-								new Notice(`Error reloading: ${error.message}`);
+								statusEl.setText(`❌ error reloading: ${error.message}`);
 							} else {
-								new Notice('Unknown error occurred');
+								statusEl.setText('❌ unknown error');
 							}
+							statusEl.setCssProps({ color: 'var(--text-error)' });
 						} finally {
 							button.setDisabled(false);
 							button.setButtonText('Reload models');
@@ -445,26 +505,38 @@ export class LLMConnectorSettingTab extends PluginSettingTab {
 
 			// Determine status message and style
 			if (currentAssignment) {
-				const modelStillExists = availableModels.find(
-					m => m.provider === currentAssignment.provider && m.id === currentAssignment.model
-				);
+				// Check if the assigned provider is enabled
+				const providerConfig = this.plugin.settings.providers[currentAssignment.provider];
+				const isProviderEnabled = providerConfig?.enabled ?? false;
 
-				if (modelStillExists) {
-					// Model is available and configured
-					statusDesc.setText(`✓ Configured: ${currentAssignment.model}`);
-					statusDesc.setCssProps({ color: 'var(--text-success)' });
-				} else {
-					// Provider disabled - show warning
-					const providerDisplay = getProviderDisplayName(currentAssignment.provider);
-					statusDesc.setText(`⚠ Provider disabled: ${providerDisplay}`);
+				if (!isProviderEnabled) {
+					// Provider exists in assignment but is disabled - show as unconfigured
+					statusDesc.setText('Not configured - will fall back');
 					statusDesc.setCssProps({ color: 'var(--text-error)' });
+				} else {
+					// Provider is enabled - check if model is reachable
+					const modelStillExists = availableModels.find(
+						m => m.provider === currentAssignment.provider && m.id === currentAssignment.model
+					);
+
+					if (modelStillExists) {
+						// Model is available and configured (green)
+						statusDesc.setText(`✓ Configured: ${currentAssignment.model}`);
+						statusDesc.setCssProps({ color: 'var(--text-success)' });
+					} else {
+						// Provider enabled but unreachable (yellow/orange)
+						statusDesc.setText(`⚠ provider unreachable - will fall back`);
+						statusDesc.setCssProps({ color: 'var(--text-warning)' });
+					}
 				}
 			} else if (tierDef.tier === 'embedding') {
+				// Embedding tier not configured - will error (red)
 				statusDesc.setText('Not configured - will error if requested');
 				statusDesc.setCssProps({ color: 'var(--text-error)' });
 			} else {
-				statusDesc.setText('Not configured - will fall back automatically');
-				statusDesc.setCssProps({ color: 'var(--text-muted)' });
+				// Other tiers not configured - will fall back (red)
+				statusDesc.setText('Not configured - will fall back');
+				statusDesc.setCssProps({ color: 'var(--text-error)' });
 			}
 		}
 
